@@ -77,7 +77,7 @@ public class GlobalExceptionHandler {
     }
 
     // 500 - fallback para qualquer erro não tratado
-    @ExceptionHandler(Exception.class)
+    /*@ExceptionHandler(Exception.class)
     public ResponseEntity<CustomErrorDTO> handleGenericException(Exception e,
                                                                  HttpServletRequest request) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // 500
@@ -88,5 +88,5 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(status).body(err);
-    }
+    }*/
 }
