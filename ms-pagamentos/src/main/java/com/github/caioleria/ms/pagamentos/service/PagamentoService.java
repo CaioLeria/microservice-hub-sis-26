@@ -32,7 +32,7 @@ public class PagamentoService {
         return new PagamentoDto(pagamento);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PagamentoDto savePagamento (PagamentoDto pagamentoDto){
         Pagamentos pagamento = new Pagamentos();
         mapperToPagamentoDto(pagamentoDto, pagamento);
@@ -40,7 +40,7 @@ public class PagamentoService {
         pagamento = pagamentoRepository.save(pagamento);
         return new PagamentoDto(pagamento);
     }
-    @Transactional(readOnly = true)
+    @Transactional
     public PagamentoDto updatePagamento (Long id, PagamentoDto pagamentoDto){
         try{
             Pagamentos pagamento = pagamentoRepository.getReferenceById(id);
@@ -52,7 +52,7 @@ public class PagamentoService {
         }
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public void deletePagamento (Long id){
         if (!pagamentoRepository.existsById(id)){
             throw new ResourceNotFoundException("O pagamento não existe");
