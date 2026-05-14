@@ -1,12 +1,15 @@
 package com.github.caioleria.ms.pagamentos.service;
 
+import com.github.caioleria.ms.pagamentos.client.PedidoClient;
 import com.github.caioleria.ms.pagamentos.dto.PagamentoDto;
 import com.github.caioleria.ms.pagamentos.entities.Pagamentos;
 import com.github.caioleria.ms.pagamentos.entities.Status;
+import com.github.caioleria.ms.pagamentos.exceptions.PagamentoAprovadoException;
 import com.github.caioleria.ms.pagamentos.exceptions.ResourceNotFoundException;
 import com.github.caioleria.ms.pagamentos.repositories.PagamentoRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.TransactionScoped;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,26 @@ public class PagamentoService {
 
     @Autowired
     private PagamentoRepository pagamentoRepository;
+    @Autowired
+    private PedidoClient pedidoClient;
+
+    @Transactional
+    public PagamentoDto confirmarPagamentoDoPedido (Long id){
+
+try {
+   Pagamentos pagamento = pagamentoRepository.getReferenceById(id);
+   if (pagamento.getStatus().equals(Status.APROVADO)){
+   throw new PagamentoAprovadoException(String.format("Pagamento id %d já está aprovado e não pode ser alterado" + id));
+   }
+
+    pagamento.setStatus(Status.APROVADO);
+    pagamentoRepository.save(pagamento);
+    pedidoClient.confirmarPagamento(pagamento.getPedidoId());
+    return new PagamentoDto(pagamento);
+} catch (EntityNotFoundException e ){
+    throw new ResourceNotFoundException("Recurso não encontrado "+ id);
+}
+    }
 
     @Transactional(readOnly = true)
     public List<PagamentoDto> findAllPagamentos(){

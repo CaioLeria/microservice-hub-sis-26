@@ -3,7 +3,9 @@ package com.github.caioleria.ms.pagamentos.controller;
 import com.github.caioleria.ms.pagamentos.dto.PagamentoDto;
 import com.github.caioleria.ms.pagamentos.entities.Pagamentos;
 import com.github.caioleria.ms.pagamentos.service.PagamentoService;
+import feign.Response;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,12 @@ import java.util.List;
 public class PagamentosController {
     @Autowired
     private PagamentoService pagamentoService;
+
+    @PatchMapping("/{id}/confirmar")
+    public ResponseEntity<PagamentoDto> confirmarPagamentoDoPedido(@PathVariable @NotNull Long id){
+        PagamentoDto dto = pagamentoService.confirmarPagamentoDoPedido(id);
+        return ResponseEntity.ok(dto);
+    }
 
     @GetMapping
     public ResponseEntity<List<PagamentoDto>> getAll (){

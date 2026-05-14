@@ -1,6 +1,7 @@
 package com.github.caioleria.ms.pagamentos.exceptions.handler;
 
 import com.github.caioleria.ms.pagamentos.exceptions.DatabaseException;
+import com.github.caioleria.ms.pagamentos.exceptions.PagamentoAprovadoException;
 import com.github.caioleria.ms.pagamentos.exceptions.ResourceNotFoundException;
 import com.github.caioleria.ms.pagamentos.exceptions.dto.CustomErrorDTO;
 import com.github.caioleria.ms.pagamentos.exceptions.dto.ValidationErrorDTO;
@@ -18,6 +19,15 @@ import java.time.Instant;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(PagamentoAprovadoException.class)
+    public ResponseEntity<CustomErrorDTO> handlePagamentoAprovado(PagamentoAprovadoException e, HttpServletRequest request){
+
+        HttpStatus status = HttpStatus.CONFLICT;
+
+        CustomErrorDTO err = new CustomErrorDTO(Instant.now(), status.value(), e.getMessage(),request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<CustomErrorDTO> handleResourceNotFound(ResourceNotFoundException e,
