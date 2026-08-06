@@ -21,25 +21,19 @@ public class PagamentoService {
 
     @Autowired
     private PagamentoRepository pagamentoRepository;
+
     @Autowired
     private PedidoClient pedidoClient;
 
     @Transactional
     public PagamentoDto confirmarPagamentoDoPedido (Long id){
-
-try {
-   Pagamentos pagamento = pagamentoRepository.getReferenceById(id);
-   if (pagamento.getStatus().equals(Status.APROVADO)){
-   throw new PagamentoAprovadoException(String.format("Pagamento id %d já está aprovado e não pode ser alterado" + id));
-   }
-
-    pagamento.setStatus(Status.APROVADO);
-    pagamentoRepository.save(pagamento);
-    pedidoClient.confirmarPagamento(pagamento.getPedidoId());
-    return new PagamentoDto(pagamento);
-} catch (EntityNotFoundException e ){
-    throw new ResourceNotFoundException("Recurso não encontrado "+ id);
-}
+Pagamentos pagamentos = pagamentoRepository.findById(id).orElseThrow(
+        () -> new ResourceNotFoundException("Pagamento não encontrado . id: "+id)
+);
+pagamentos.setStatus(Status.APROVADO);
+pagamentoRepository.save(pagamentos);
+pedidoClient.confirmarPagamento(pagamentos.getPedidoId());
+return new PagamentoDto(pagamentos);
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +61,11 @@ try {
     public PagamentoDto updatePagamento (Long id, PagamentoDto pagamentoDto){
         try{
             Pagamentos pagamento = pagamentoRepository.getReferenceById(id);
+            if(pagamento.getStatus().equals(Status.APROVADO)){
+                throw new PagamentoAprovadoException(
+                        String.format("Pagamento id %d ja esta aprovado e não pode ser alterado",id)
+                );
+            }
             mapperToPagamentoDto(pagamentoDto, pagamento);
             pagamento = pagamentoRepository.save(pagamento);
             return new PagamentoDto(pagamento);

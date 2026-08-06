@@ -5,6 +5,7 @@ import com.github.caioleria.ms.pedidos.dto.PedidoDto;
 import com.github.caioleria.ms.pedidos.entities.ItemDoPedido;
 import com.github.caioleria.ms.pedidos.entities.Pedido;
 import com.github.caioleria.ms.pedidos.entities.Status;
+import com.github.caioleria.ms.pedidos.exceptions.PedidoPagoException;
 import com.github.caioleria.ms.pedidos.exceptions.ResourceNotFoundException;
 import com.github.caioleria.ms.pedidos.repositories.ItemDoPedidoRepository;
 import com.github.caioleria.ms.pedidos.repositories.PedidoRepository;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PedidoService {
@@ -52,6 +54,13 @@ private ItemDoPedidoRepository itemDoPedidoRepository;
     public PedidoDto updatePedido(Long id, PedidoDto pedidoDto){
     try{
         Pedido pedido = pedidoRepository.getReferenceById(id);
+
+        if (pedido.getStatus().equals(Status.PAGO)){
+            throw new PedidoPagoException(
+                    String.format("O pedido %d já esta pago, não pode ser  mudado", id)
+            );
+        }
+
         pedido.getItemsDoPedido().clear();
         pedido.setData(LocalDate.now());
         pedido.setStatus(Status.CRIADO);
@@ -84,5 +93,13 @@ private ItemDoPedidoRepository itemDoPedidoRepository;
         pedido.getItemsDoPedido().add(item);
     }
     }
-
+@Transactional
+    public void confirmarPagamento(Long id){
+    Optional<Pedido> pedido = pedidoRepository.findById(id);
+    if (pedido.isEmpty()){
+        throw new ResourceNotFoundException("Pedido não encontrado. id: " + id);
+    }
+    pedido.get().setStatus(Status.PAGO);
+    pedidoRepository.save(pedido.get());
+}
 }

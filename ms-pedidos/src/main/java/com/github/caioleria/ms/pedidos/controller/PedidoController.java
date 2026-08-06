@@ -51,4 +51,8 @@ public class PedidoController {
         pedidoService.deletePedido(id);
         return ResponseEntity.noContent().build();
     }
+    @PutMapping("/{pedidoId}/pagamento/confirmado")
+    public void confirmarPagamento(@PathVariable Long pedidoId){
+        pedidoService.confirmarPagamento(pedidoId);
+    }
 }
