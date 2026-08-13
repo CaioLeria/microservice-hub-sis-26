@@ -4,8 +4,10 @@ import com.github.caioleria.ms.pagamentos.dto.PagamentoDto;
 import com.github.caioleria.ms.pagamentos.entities.Pagamentos;
 import com.github.caioleria.ms.pagamentos.service.PagamentoService;
 import feign.Response;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/pagamentos")
 public class PagamentosController {
@@ -21,10 +24,17 @@ public class PagamentosController {
     private PagamentoService pagamentoService;
 
     @PatchMapping("/{id}/confirmar")
+    @CircuitBreaker(name = "atualizarPedido", fallbackMethod = "fallbackCorfimarPagamentoPendende")
     public ResponseEntity<PagamentoDto> confirmarPagamentoDoPedido(@PathVariable @NotNull Long id){
         PagamentoDto dto = pagamentoService.confirmarPagamentoDoPedido(id);
         return ResponseEntity.ok(dto);
     }
+
+   public ResponseEntity<PagamentoDto> fallbackCorfimarPagamentoPendende(Long id, Throwable e){
+       log.error("Falha ao confirmar pedido {}. Ativando fallback. Erro {}", id, e.getMessage());
+      PagamentoDto dto = pagamentoService.alterarStatusDoPagamento(id);
+        return ResponseEntity.status(503).body(dto);
+   }
 
     @GetMapping
     public ResponseEntity<List<PagamentoDto>> getAll (){

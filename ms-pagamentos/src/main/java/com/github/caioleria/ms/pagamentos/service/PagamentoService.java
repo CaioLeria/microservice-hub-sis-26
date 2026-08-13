@@ -8,8 +8,8 @@ import com.github.caioleria.ms.pagamentos.exceptions.PagamentoAprovadoException;
 import com.github.caioleria.ms.pagamentos.exceptions.ResourceNotFoundException;
 import com.github.caioleria.ms.pagamentos.repositories.PagamentoRepository;
 
+import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.TransactionScoped;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +32,13 @@ Pagamentos pagamentos = pagamentoRepository.findById(id).orElseThrow(
 );
 pagamentos.setStatus(Status.APROVADO);
 pagamentoRepository.save(pagamentos);
-pedidoClient.confirmarPagamento(pagamentos.getPedidoId());
+//try{
+//    pedidoClient.confirmarPagamento(pagamentos.getPedidoId());
+//} catch (FeignException.NotFound e){
+ //   throw new ResourceNotFoundException("Pedido não encontrado, id: " + pagamentos.getPedidoId());
+//} catch (FeignException e) {
+ //   throw new RuntimeException("falha ao comunicar com ms-pedido");
+//}
 return new PagamentoDto(pagamentos);
     }
 
@@ -82,6 +88,15 @@ return new PagamentoDto(pagamentos);
 
             pagamentoRepository.deleteById(id);
         }
+    }
+    @Transactional
+    public PagamentoDto alterarStatusDoPagamento(Long id){
+        Pagamentos pagamento = pagamentoRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("pagamnto não encontrado || id: "+ id)
+        );
+        pagamento.setStatus(Status.CONFIRMACAO_PENDENTE);
+        pagamento = pagamentoRepository.save(pagamento);
+        return new PagamentoDto(pagamento);
     }
 
     private void mapperToPagamentoDto (PagamentoDto pagamentoDto,Pagamentos pagamento){
